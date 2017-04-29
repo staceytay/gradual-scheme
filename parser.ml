@@ -1,12 +1,41 @@
 open Ast
 open Lexer
 
-let rec parse_lambda (tokens : token list) : exp * token list =
+let rec parse_annotation (tokens : token list) : t * token list =
   match tokens with
-  | LPAREN::(ID id)::RPAREN::tail ->
-     let exp, tail = parse_exp tail
-     in (Lambda (id, exp), tail)
-  | _ -> failwith "parse_lambda: Unexpected token"
+  | BOOL::ARROW::tail ->
+     let t, tail = parse_annotation tail
+     in (ArrowT (BoolT, t)), tail
+  | INT::ARROW::tail ->
+     let t, tail = parse_annotation tail
+     in (ArrowT (IntT, t)), tail
+  | STAR::ARROW::tail ->
+     let t, tail = parse_annotation tail
+     in (ArrowT (StarT, t)), tail
+  | BOOL::tail -> BoolT, tail
+  | INT::tail -> IntT, tail
+  | STAR::tail -> StarT, tail
+  | _ -> failwith "parse_annotation: Unexpected token"
+
+let rec parse_lambda (tokens : token list) : exp * token list =
+  let rett, tail =
+    (match tokens with
+     | COLON::tail -> parse_annotation tail
+     | LPAREN::_ -> StarT, tokens
+     | _ -> failwith "parse_lambda: Unexpected token")
+  in let id, argt, tail =
+       (match tail with
+        | LPAREN::(ID id)::COLON::tail ->
+           let t, tail = parse_annotation tail
+           in let tail =
+                (match tail with
+                 | RPAREN::tail -> tail
+                 | _ -> failwith "parse_lambda: Unexpected token")
+              in id, t, tail
+        | LPAREN::(ID id)::RPAREN::tail -> id, StarT, tail
+        | _ -> failwith "parse_lambda: Unexpected token")
+     in let exp, tail = parse_exp tail
+        in (Lambda (id, exp, ArrowT (argt, rett)), tail)
 
 and parse_app (tokens : token list) : exp * token list =
   let exp0, tail = parse_exp tokens

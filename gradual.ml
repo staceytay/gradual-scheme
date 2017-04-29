@@ -11,6 +11,12 @@ let untyped_exp = [
   ]
 
 let typed_exp = [
+    "(lambda (x : ?) x)";
+    "(lambda : int (x : int) x)";
+    "(lambda : ? (x : ?) x)";
+    "(lambda : ? -> ? (f : ? -> ?) f)";
+    "(lambda (f : int -> int) (f 0))";
+    "(lambda : int (f : int -> int) (f 0))";
     "((lambda (f : ? -> ?) f) (lambda (x : int) x))";
   ]
 
@@ -26,5 +32,9 @@ let print_ast (input : string) : unit =
            print_endline "-----------------------------------------------------------------------"
 ;;
 
-List.map print_ast untyped_exp
+Printf.printf "*** UNTYPED ***\n";;
+List.map print_ast untyped_exp;;
+print_endline "";;
+Printf.printf "*** TYPED ***\n";;
+List.map print_ast typed_exp
 
