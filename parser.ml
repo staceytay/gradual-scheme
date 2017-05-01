@@ -1,6 +1,11 @@
 open Ast
 open Lexer
 
+exception Parse_error of token
+exception Parser_invalid_annot of token
+exception Parser_missing_rparen
+exception Parser_unexpected_end
+
 let rec parse_annotation (tokens : token list) : t * token list =
   match tokens with
   | BOOL::ARROW::tail ->
@@ -15,14 +20,16 @@ let rec parse_annotation (tokens : token list) : t * token list =
   | BOOL::tail -> BoolT, tail
   | INT::tail -> IntT, tail
   | STAR::tail -> StarT, tail
-  | _ -> failwith "parse_annotation: Unexpected token"
+  | token::_ -> raise (Parser_invalid_annot token)
+  | [] -> raise Parser_unexpected_end
 
 let rec parse_lambda (tokens : token list) : exp * token list =
   let rett, tail =
     (match tokens with
      | COLON::tail -> parse_annotation tail
      | LPAREN::_ -> StarT, tokens
-     | _ -> failwith "parse_lambda: Unexpected token")
+     | token::_ -> raise (Parse_error token)
+     | [] -> raise Parser_unexpected_end)
   in let id, argt, tail =
        (match tail with
         | LPAREN::(ID id)::COLON::tail ->
@@ -30,19 +37,19 @@ let rec parse_lambda (tokens : token list) : exp * token list =
           in let tail =
                (match tail with
                 | RPAREN::tail -> tail
-                | _ -> failwith "parse_lambda: Unexpected token")
+                | token::_ -> raise (Parse_error token)
+                | [] -> raise Parser_missing_rparen)
           in id, t, tail
         | LPAREN::(ID id)::RPAREN::tail -> id, StarT, tail
-        | _ -> failwith "parse_lambda: Unexpected token")
+        | token::_ -> raise (Parse_error token)
+        | [] -> raise Parser_unexpected_end)
   in let exp, tail = parse_exp tail
   in (Lambda (id, exp, ArrowT (argt, rett)), tail)
 
 and parse_app (tokens : token list) : exp * token list =
   let exp0, tail = parse_exp tokens
   in let exp1, tail = parse_exp tail
-  in (match tail with
-      | RPAREN::_ -> (App (exp0, exp1)), tail
-      | _ -> failwith "parse_app: Unexpected token")
+  in (App (exp0, exp1)), tail
 
 and parse_exp (tokens : token list) : exp * token list =
   match tokens with
@@ -55,18 +62,20 @@ and parse_exp (tokens : token list) : exp * token list =
     in (match tail with
         | RPAREN::tail ->
           lambda_exp, tail
-        | _ ->
-          failwith "parse_exp: Unexpected token")
+        | token::_ -> raise (Parse_error token)
+        | [] -> raise Parser_missing_rparen)
   | LPAREN::tail ->
     let app_exp, tail = parse_app tail
     in (match tail with
         | RPAREN::tail -> app_exp, tail
-        | _ -> failwith "parse_exp: Unexpected token")
-  | _ ->
-    failwith "parse_exp: Unexpected token"
+        | token::_ -> raise (Parse_error token)
+        | _ -> raise Parser_missing_rparen)
+  | token::_ ->
+    raise (Parse_error token)
+  | _ -> assert false
 
 let parse (tokens : token list) : exp =
   match (parse_exp tokens) with
   | e, [] -> e
-  | e, tail ->
-    failwith "parse: Unexpected token"
+  | e, (token::_) ->
+    raise (Parse_error token)

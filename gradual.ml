@@ -24,12 +24,15 @@ let welcome_message =
   "\n"
 
 let check_input input =
-  Printf.printf "[INPUT] %s\n" input;
   try
     let tokens = tokenize input
-    in let ast = parse tokens
-    in let _ = type_check [] ast
-    in Printf.printf "[OK] %s\n" input
+    in match tokens with
+    | [] -> ()
+    | _ ->
+      let ast = parse tokens
+      in let _ = type_check [] ast
+      in Printf.printf "[INPUT] %s\n" input;
+      Printf.printf "[OK] %s\n" input
   with
   | Application_inconsistent_types ((e1, t1), (e2, t2)) ->
     Printf.printf "[ERROR] %s is not consistent with %s.\n"
@@ -40,6 +43,16 @@ let check_input input =
   | Misannotated_return_type (e, t) ->
     Printf.printf "[ERROR] Misannotated return type %s for %s.\n"
       (string_of_t t) (show_exp e)
+  | Parse_error token ->
+    Printf.printf "[ERROR] Unexpected token %s in %s.\n"
+      (show_token token) input
+  | Parser_invalid_annot token ->
+    Printf.printf "[ERROR] Invalid annotation syntax %s in %s.\n"
+      (show_token token) input
+  | Parser_missing_rparen ->
+    Printf.printf "[ERROR] Missing closing parenthesis in %s.\n" input
+  | Parser_unexpected_end ->
+    Printf.printf "[ERROR] Unexpected end in %s.\n" input
   | Syntax_error s ->
     Printf.printf "[ERROR] Invalid syntax %s in %s.\n" s input
 
