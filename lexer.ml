@@ -13,11 +13,13 @@ type token =
   | TRUE
 [@@deriving show]
 
+exception Syntax_error of string
+
 let digit = [%sedlex.regexp? '0'..'9']
 let number = [%sedlex.regexp? Plus digit]
 let letter = [%sedlex.regexp? 'a'..'z'|'A'..'Z']
 
-let tokenize buf =
+let tokenize input =
   let rec aux buf tokens =
     match%sedlex buf with
     | '(' -> aux buf (LPAREN::tokens)
@@ -36,6 +38,9 @@ let tokenize buf =
        aux buf (ID (Sedlexing.Utf8.lexeme buf)::tokens)
     | white_space -> aux buf tokens
     | eof -> tokens
-    | _ -> failwith "Unexpected character"
-  in List.rev (aux buf [])
+    | any ->
+       let char = Sedlexing.Utf8.lexeme buf
+       in raise (Syntax_error char)
+    | _ -> assert false
+  in List.rev (aux (Sedlexing.Utf8.from_string input) [])
 ;;
