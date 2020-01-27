@@ -1,26 +1,11 @@
 # Gradual Scheme
 
-A gradually typed GTLC with Scheme-like syntax.
-
-## Syntax of GTLC
-
-- [x] AST
-- [x] Allow type annotations
-- [ ] Fix AST to have option type for annotations
-- [x] Pretty print AST
-- [x] REPL
-- [ ] Gradual Typecheck - Need environment
-- [ ] Evaluation? With casts
-
-Extensions
-
-- [ ] Blame, to be assigned by parser
-- [ ] Type Inference
+A simple implementation of the Gradually Typed Lambda Calculus with a Scheme-like syntax in OCaml. For an introduction to gradual typing and more details on this implementation, see _[Gradual Typing and The Gradually Typed Lambda Calculus](https://stace.dev/static/gradual-typing-e034014d3c4358b7745a06490939788f.pdf)_.
 
 ## Examples
 
-```
-A simple implementation of gradual scheme.
+```scheme
+A typechecker for a simple, gradual scheme.
     Here are some example expressions.
         #t
         (lambda (x) x)
@@ -37,7 +22,35 @@ A simple implementation of gradual scheme.
 [ERROR] int is not consistent with bool.
 ```
 
+## Installing
+
+```bash
+# Install dependencies.
+> opam install ppx_deriving sedlex
+
+# Build.
+> make
+
+# Run REPL.
+> ./gradual.native
+```
+
+
+## Implementation Checklist
+
+- [x] AST
+- [x] Allow type annotations
+- [ ] Fix AST to have option type for annotations
+- [x] Pretty print AST
+- [x] REPL
+- [ ] Support assignment operation
+- [ ] Support evaluation with casts
+
+### Extensions
+
+- [ ] Blame, to be assigned by parser
+- [ ] Type Inference
 
 ## References
 
-http://norvig.com/lispy.html
+- [(How to Write a (Lisp) Interpreter (in Python))](http://norvig.com/lispy.html)

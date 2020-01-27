@@ -16,7 +16,7 @@ let misannotated_exp = [
 ]
 
 let welcome_message =
-  "A simple implementation of gradual scheme.\n" ^
+  "A typechecker for a simple, gradual scheme.\n" ^
   "    Here are some example expressions.\n" ^
   "        " ^ (String.concat "\n        " example_exp) ^ "\n" ^
   "    Here are some misannotated example expressions.\n" ^
